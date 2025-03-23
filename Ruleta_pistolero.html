@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ruleta de Letras - Juego del Pistolero</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #1e3a8a, #2563eb);
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .ruleta {
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      position: relative;
+      margin: auto;
+    }
+    .letra {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: white;
+      top: 50%;
+      left: 50%;
+      transform-origin: center center;
+    }
+    .seleccionada {
+      color: #facc15 !important;
+      font-size: 1.6rem;
+    }
+    .aguja {
+      width: 6px;
+      height: 180px;
+      background-color: #facc15;
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform-origin: bottom center;
+      transform: rotate(0deg);
+      transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1);
+      z-index: 10;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4">
+  <h1 class="text-3xl font-bold mb-4">Juego del Pistolero</h1>
+  <div class="relative">
+    <div class="ruleta" id="ruleta"></div>
+    <div class="aguja" id="aguja"></div>
+    <button id="botonGirar" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-6 rounded-full shadow-lg text-xl">Girar</button>
+  </div>
+  <div class="mt-8 text-2xl">
+    Letra seleccionada: <span id="letraSeleccionada" class="font-bold text-yellow-300"></span>
+  </div>
+  <div class="mt-4 text-4xl font-mono">
+    Tiempo restante: <span id="temporizador">05:00</span>
+  </div>
+
+  <script>
+    const letras = [..."ABCDEFGHIJKLMNÑOPQRSTUVWXYZ"];
+    const ruleta = document.getElementById("ruleta");
+    const aguja = document.getElementById("aguja");
+    const boton = document.getElementById("botonGirar");
+    const letraSpan = document.getElementById("letraSeleccionada");
+    const temporizador = document.getElementById("temporizador");
+
+    let anguloPorLetra = 360 / letras.length;
+    let tiempo;
+
+    // Crear letras fijas alrededor del rosco centrado
+    letras.forEach((letra, i) => {
+      const elem = document.createElement("div");
+      elem.className = "letra";
+      const angle = i * anguloPorLetra;
+      elem.style.transform = `rotate(${angle}deg) translate(0, -180px) rotate(-${angle}deg)`;
+      elem.innerText = letra;
+      ruleta.appendChild(elem);
+    });
+
+    function girarAguja() {
+      boton.disabled = true;
+      letraSpan.innerText = "";
+      ruleta.querySelectorAll(".letra").forEach(l => l.classList.remove("seleccionada"));
+
+      let vueltas = Math.floor(Math.random() * 5) + 5; // de 5 a 9 vueltas
+      let letraFinal = Math.floor(Math.random() * letras.length);
+      let anguloFinal = (360 * vueltas) + (letraFinal * anguloPorLetra);
+
+      aguja.style.transition = "transform 4s cubic-bezier(0.25, 1, 0.5, 1)";
+      aguja.style.transform = `rotate(${anguloFinal}deg)`;
+
+      setTimeout(() => {
+        const letrasDOM = ruleta.querySelectorAll(".letra");
+        letrasDOM[letraFinal].classList.add("seleccionada");
+        letraSpan.innerText = letras[letraFinal];
+        iniciarTemporizador(5 * 60); // 5 minutos
+        boton.disabled = false; // volver a activar botón
+      }, 4000);
+    }
+
+    function iniciarTemporizador(segundos) {
+      clearInterval(tiempo);
+      function actualizar() {
+        const min = String(Math.floor(segundos / 60)).padStart(2, '0');
+        const seg = String(segundos % 60).padStart(2, '0');
+        temporizador.innerText = `${min}:${seg}`;
+        if (segundos <= 0) {
+          clearInterval(tiempo);
+        }
+        segundos--;
+      }
+      actualizar();
+      tiempo = setInterval(actualizar, 1000);
+    }
+
+    boton.addEventListener("click", girarAguja);
+  </script>
+</body>
+</html>
